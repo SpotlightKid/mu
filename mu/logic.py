@@ -977,6 +977,21 @@ class Editor:
         else:
             self._view.reset_annotations()
 
+    def _open_webbrowser(self, url):
+        if not webbrowser._browsers and sys.version_info[:3] == (3, 7, 0):
+            # See https://bugs.python.org/issue31014
+            env_browser = os.environ.get('BROWSER')
+            if env_browser:
+                del os.environ['BROWSER']
+            webbrowser.register_standard_browsers()
+            if env_browser and env_browser not in webbrowser._browsers:
+                webbrowser.register(env_browser, None,
+                                    webbrowser.GenericBrowser(env_browser),
+                                    preferred=True)
+            if env_browser:
+                os.environ['BROWSER'] = env_browser
+        return webbrowser.open_new(url)
+
     def show_help(self):
         """
         Display browser based help about Mu.
@@ -990,7 +1005,7 @@ class Editor:
         major_version = '.'.join(__version__.split('.')[:2])
         url = 'https://codewith.mu/{}/help/{}'.format(language_code,
                                                       major_version)
-        webbrowser.open_new(url)
+        self._open_webbrowser(url)
 
     def quit(self, *args, **kwargs):
         """
